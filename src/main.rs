@@ -35,6 +35,7 @@ struct Step {
 	commands: Vec<String>,
 	agents: Map<String, String>,
 	env: Map<String, String>,
+	#[serde(skip_serializing_if = "Option::is_none")]
 	soft_fail: Option<Vec<Map<String, i32>>>,
 }
 
