@@ -115,7 +115,7 @@ fn main() -> Result<(), Box<Error>> {
     let travis: Travis = serde_yaml::from_str(&contents)?;
     let buildkite: Buildkite = travis.into();
 
-    println!("{}", serde_yaml::to_string(&buildkite).expect("generate"));
+    println!("{}", serde_yaml::to_string(&buildkite)?);
 
     Ok(())
 }
