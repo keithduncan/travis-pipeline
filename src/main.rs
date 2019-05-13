@@ -22,6 +22,7 @@ struct Travis {
 	rust: Vec<String>,
 	env: Vec<String>,
 	script: Vec<String>,
+	matrix: Option<Map<String, Vec<Map<String, String>>>>,
 }
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
@@ -34,6 +35,7 @@ struct Step {
 	commands: Vec<String>,
 	agents: Map<String, String>,
 	env: Map<String, String>,
+	soft_fail: Option<Vec<Map<String, i32>>>,
 }
 
 impl From<Travis> for Buildkite {
@@ -59,6 +61,7 @@ impl From<Travis> for Buildkite {
 					.into_iter()
 					.collect(),
 				env: buildkite_env,
+				soft_fail: None,
 			});
 		}
 
@@ -106,6 +109,7 @@ mod tests {
     			"cd $CRATE".to_string(),
     			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
     		],
+    		matrix: None,
     	};
     	println!("{:#?}", travis);
 
@@ -130,6 +134,7 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
+		    		soft_fail: None,
     			},
     			Step {
     				commands: vec![
@@ -147,6 +152,7 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
+		    		soft_fail: None,
     			},
     			Step {
     				commands: vec![
@@ -164,6 +170,7 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
+		    		soft_fail: None,
     			},
     			Step {
     				commands: vec![
@@ -181,6 +188,7 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
+		    		soft_fail: None,
     			}
     		]
     	});
