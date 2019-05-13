@@ -9,6 +9,7 @@ extern crate serde_yaml;
 use serde::{Serialize, Deserialize};
 
 use std::{
+	env,
 	fs::File,
 	io::Read,
 	result::Result,
@@ -108,14 +109,16 @@ impl From<Travis> for Buildkite {
 }
 
 fn main() -> Result<(), Box<Error>> {
-	let mut file = File::open("example/travis.yml")?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
+	for argument in env::args().into_iter().skip(1) {
+		let mut file = File::open(argument)?;
+	    let mut contents = String::new();
+	    file.read_to_string(&mut contents)?;
 
-    let travis: Travis = serde_yaml::from_str(&contents)?;
-    let buildkite: Buildkite = travis.into();
+	    let travis: Travis = serde_yaml::from_str(&contents)?;
+	    let buildkite: Buildkite = travis.into();
 
-    println!("{}", serde_yaml::to_string(&buildkite)?);
+	    println!("{}", serde_yaml::to_string(&buildkite)?);
+	}
 
     Ok(())
 }
