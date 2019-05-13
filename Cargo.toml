@@ -1,0 +1,11 @@
+[package]
+name = "travis-pipeline"
+version = "0.1.0"
+authors = ["Keith Duncan <keith_duncan@me.com>"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8.9"
+itertools = "0.8.0"
+shellwords = "1.0.0"
