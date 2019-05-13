@@ -112,9 +112,10 @@ fn main() -> Result<(), Box<Error>> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
-    let config: Travis = serde_yaml::from_str(&contents)?;
+    let travis: Travis = serde_yaml::from_str(&contents)?;
+    let buildkite: Buildkite = travis.into();
 
-    println!("{:#?}", config);
+    println!("{}", serde_yaml::to_string(&buildkite).expect("generate"));
 
     Ok(())
 }
