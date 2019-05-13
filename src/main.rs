@@ -52,7 +52,7 @@ impl From<Travis> for Buildkite {
 				})
 				.collect();
 
-			steps.push(Step {
+			let mut step = Step {
 				commands: travis.script.clone(),
 				agents: vec![
 						("rust".to_string(), rust.clone()),
@@ -62,7 +62,42 @@ impl From<Travis> for Buildkite {
 					.collect(),
 				env: buildkite_env,
 				soft_fail: None,
-			});
+			};
+
+			if let Some(ref matrix) = travis.matrix {
+				if let Some(allow) = matrix.get("allow_failures") {
+					let optional = allow
+						.iter()
+						.any(|case| {
+							// TODO make this generic for the iproduct fields
+							if let Some(case_rust) = case.get("rust") {
+								if case_rust != &rust {
+									return false;
+								}
+							}
+
+							if let Some(case_env) = case.get("env") {
+								if case_env != &env {
+									return false;
+								}
+							}
+
+							true
+						});
+
+					if optional {
+						step.soft_fail = Some(vec![
+							vec![
+								("exit_status".to_string(), 1)
+							]
+							.into_iter()
+							.collect()
+						]);
+					}
+				}
+			}
+
+			steps.push(step);
 		}
 
 		Buildkite {
@@ -109,7 +144,22 @@ mod tests {
     			"cd $CRATE".to_string(),
     			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
     		],
-    		matrix: None,
+    		matrix: Some(
+    			vec![
+    				(
+    					"allow_failures".to_string(),
+    					vec![
+    						vec![
+    							("rust".to_string(), "nightly".to_string())
+    						]
+    						.into_iter()
+    						.collect()
+    					]
+    				),
+    			]
+    			.into_iter()
+    			.collect()
+    		),
     	};
     	println!("{:#?}", travis);
 
@@ -170,7 +220,15 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
-		    		soft_fail: None,
+		    		soft_fail: Some(
+		    			vec![
+		    				vec![
+		    					("exit_status".to_string(), 1)
+		    				]
+		    				.into_iter()
+		    				.collect()
+		    			]
+		    		),
     			},
     			Step {
     				commands: vec![
@@ -188,7 +246,15 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
-		    		soft_fail: None,
+		    		soft_fail: Some(
+		    			vec![
+		    				vec![
+		    					("exit_status".to_string(), 1)
+		    				]
+		    				.into_iter()
+		    				.collect()
+		    			]
+		    		),
     			}
     		]
     	});
