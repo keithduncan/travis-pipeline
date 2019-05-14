@@ -172,8 +172,8 @@ mod tests {
     	let travis = Travis {
     		rust: vec!["stable".to_string(), "nightly".to_string()],
     		env: vec![
-    			"CRATE=boards/feather_m4".to_string(),
-    			"CRATE=boards/gemma_m0".to_string()
+    			"CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string(),
+    			"CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()
     		],
     		script: vec![
     			"cd $CRATE".to_string(),
@@ -208,7 +208,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: Some(":rust: stable, CRATE=boards/feather_m4".to_string()),
+		    		label: Some(":rust: stable, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -217,6 +217,7 @@ mod tests {
 		    		.collect::<Map<_, _>>(),
 		    		env: vec![
 		    			("CRATE".to_string(), "boards/feather_m4".to_string()),
+		    			("EXAMPLES".to_string(), "--example=blinky_basic --example=blinky_rtfm".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
@@ -227,7 +228,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: Some(":rust: stable, CRATE=boards/gemma_m0".to_string()),
+		    		label: Some(":rust: stable, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -236,6 +237,7 @@ mod tests {
 		    		.collect::<Map<_, _>>(),
 		    		env: vec![
 		    			("CRATE".to_string(), "boards/gemma_m0".to_string()),
+		    			("FEATURES".to_string(), "--features=unproven".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
@@ -246,7 +248,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: Some(":rust: nightly, CRATE=boards/feather_m4".to_string()),
+		    		label: Some(":rust: nightly, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -255,6 +257,7 @@ mod tests {
 		    		.collect::<Map<_, _>>(),
 		    		env: vec![
 		    			("CRATE".to_string(), "boards/feather_m4".to_string()),
+		    			("EXAMPLES".to_string(), "--example=blinky_basic --example=blinky_rtfm".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
@@ -271,7 +274,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: Some(":rust: nightly, CRATE=boards/gemma_m0".to_string()),
+		    		label: Some(":rust: nightly, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -280,6 +283,7 @@ mod tests {
 		    		.collect::<Map<_, _>>(),
 		    		env: vec![
 		    			("CRATE".to_string(), "boards/gemma_m0".to_string()),
+		    			("FEATURES".to_string(), "--features=unproven".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
