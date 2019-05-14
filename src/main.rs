@@ -60,7 +60,7 @@ impl From<Travis> for Buildkite {
 
 			let mut step = Step {
 				commands: travis.script.clone(),
-				label: None,
+				label: Some(format!(":rust: {}, {}", rust, env)),
 				agents: vec![
 						("rust".to_string(), rust.clone()),
 						("rust:embedded".to_string(), "true".to_string()),
@@ -183,7 +183,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: None,
+		    		label: Some(":rust: stable, CRATE=boards/feather_m4".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -202,7 +202,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: None,
+		    		label: Some(":rust: stable, CRATE=boards/gemma_m0".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -221,7 +221,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: None,
+		    		label: Some(":rust: nightly, CRATE=boards/feather_m4".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -246,7 +246,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
-		    		label: None,
+		    		label: Some(":rust: nightly, CRATE=boards/gemma_m0".to_string()),
 		    		agents: vec![
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
