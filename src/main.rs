@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate itertools;
 
+#[cfg(test)]
+extern crate pretty_assertions;
+
 extern crate shellwords;
 
 extern crate serde;
@@ -136,7 +139,11 @@ mod tests {
 		Travis,
 		Buildkite,
 		Step,
-		Map
+		Map,
+		pretty_assertions::{
+			assert_eq,
+			assert_ne
+		},
 	};
 
     #[test]
