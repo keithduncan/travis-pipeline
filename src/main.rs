@@ -44,7 +44,7 @@ struct Step {
 	#[serde(skip_serializing_if = "Map::is_empty")]
 	env: Map<String, String>,
 	#[serde(skip_serializing_if = "Vec::is_empty")]
-	soft_fail: Vec<Map<String, i32>>,
+	soft_fail: Vec<Map<String, String>>,
 }
 
 fn buildkite_env_for_travis_env(travis: &str) -> Map<String, String> {
@@ -100,7 +100,7 @@ impl From<Travis> for Buildkite {
 					if optional {
 						step.soft_fail = vec![
 							vec![
-								("exit_status".to_string(), 1)
+								("exit_status".to_string(), "*".to_string()),
 							]
 							.into_iter()
 							.collect()
@@ -263,7 +263,7 @@ mod tests {
 		    		.collect::<Map<_, _>>(),
 		    		soft_fail: vec![
 		    			vec![
-		    				("exit_status".to_string(), 1)
+		    				("exit_status".to_string(), "*".to_string()),
 		    			]
 		    			.into_iter()
 		    			.collect()
@@ -289,7 +289,7 @@ mod tests {
 		    		.collect::<Map<_, _>>(),
 		    		soft_fail: vec![
 		    			vec![
-		    				("exit_status".to_string(), 1)
+		    				("exit_status".to_string(), "*".to_string()),
 		    			]
 		    			.into_iter()
 		    			.collect()
