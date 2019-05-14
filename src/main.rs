@@ -44,20 +44,22 @@ struct Step {
 	soft_fail: Vec<Map<String, i32>>,
 }
 
+fn buildkite_env_for_travis_env(travis: &str) -> Map<String, String> {
+	shellwords::split(travis)
+		.expect("env parses")
+		.into_iter()
+		.map(|string| {
+			let key_value: Vec<_> = string.split('=').collect();
+			(key_value[0].to_string(), key_value[1].to_string())
+		})
+		.collect()
+}
+
 impl From<Travis> for Buildkite {
 	fn from(travis: Travis) -> Buildkite {
 		let mut steps: Vec<Step> = Vec::new();
 
 		for (rust, env) in iproduct!(travis.rust, travis.env) {
-			let buildkite_env = shellwords::split(&env)
-				.expect("env parses")
-				.into_iter()
-				.map(|string| {
-					let key_value: Vec<_> = string.split('=').collect();
-					(key_value[0].to_string(), key_value[1].to_string())
-				})
-				.collect();
-
 			let mut step = Step {
 				commands: travis.script.clone(),
 				label: Some(format!(":rust: {}, {}", rust, env)),
@@ -67,7 +69,7 @@ impl From<Travis> for Buildkite {
 					]
 					.into_iter()
 					.collect(),
-				env: buildkite_env,
+				env: buildkite_env_for_travis_env(&env),
 				soft_fail: Vec::new(),
 			};
 
