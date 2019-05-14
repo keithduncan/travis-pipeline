@@ -48,8 +48,8 @@ fn buildkite_env_for_travis_env(travis: &str) -> Map<String, String> {
 	shellwords::split(travis)
 		.expect("env parses")
 		.into_iter()
-		.map(|string| {
-			let key_value: Vec<_> = string.split('=').collect();
+		.map(|word| {
+			let key_value: Vec<_> = word.splitn(2, '=').collect();
 			(key_value[0].to_string(), key_value[1].to_string())
 		})
 		.collect()
@@ -142,6 +142,22 @@ mod tests {
     #[test]
     fn it_works() {
     	assert_eq!(2 + 2, 4);
+    }
+
+    #[test]
+    fn convert_env() {
+    	let travis_env = "CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"";
+    	println!("{:#?}", travis_env);
+    	
+    	let buildkite_env = super::buildkite_env_for_travis_env(travis_env);
+    	println!("{:#?}", buildkite_env);
+
+    	assert_eq!(buildkite_env, vec![
+    		("CRATE".to_string(), "boards/feather_m4".to_string()),
+    		("EXAMPLES".to_string(), "--example=blinky_basic --example=blinky_rtfm".to_string()),
+    	]
+    	.into_iter()
+    	.collect::<Map<_, _>>());
     }
 
     #[test]
