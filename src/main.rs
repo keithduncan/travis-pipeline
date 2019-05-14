@@ -34,10 +34,14 @@ struct Buildkite {
 #[derive(Serialize, Debug, PartialEq, Eq)]
 struct Step {
 	commands: Vec<String>,
-	agents: Map<String, String>,
-	env: Map<String, String>,
 	#[serde(skip_serializing_if = "Option::is_none")]
-	soft_fail: Option<Vec<Map<String, i32>>>,
+	label: Option<String>,
+	#[serde(skip_serializing_if = "Map::is_empty")]
+	agents: Map<String, String>,
+	#[serde(skip_serializing_if = "Map::is_empty")]
+	env: Map<String, String>,
+	#[serde(skip_serializing_if = "Vec::is_empty")]
+	soft_fail: Vec<Map<String, i32>>,
 }
 
 impl From<Travis> for Buildkite {
@@ -56,6 +60,7 @@ impl From<Travis> for Buildkite {
 
 			let mut step = Step {
 				commands: travis.script.clone(),
+				label: None,
 				agents: vec![
 						("rust".to_string(), rust.clone()),
 						("rust:embedded".to_string(), "true".to_string()),
@@ -63,7 +68,7 @@ impl From<Travis> for Buildkite {
 					.into_iter()
 					.collect(),
 				env: buildkite_env,
-				soft_fail: None,
+				soft_fail: Vec::new(),
 			};
 
 			if let Some(ref matrix) = travis.matrix {
@@ -88,13 +93,13 @@ impl From<Travis> for Buildkite {
 						});
 
 					if optional {
-						step.soft_fail = Some(vec![
+						step.soft_fail = vec![
 							vec![
 								("exit_status".to_string(), 1)
 							]
 							.into_iter()
 							.collect()
-						]);
+						];
 					}
 				}
 			}
@@ -178,6 +183,7 @@ mod tests {
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
+		    		label: None,
 		    		agents: vec![
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -189,13 +195,14 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
-		    		soft_fail: None,
+		    		soft_fail: Vec::new(),
     			},
     			Step {
     				commands: vec![
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
+		    		label: None,
 		    		agents: vec![
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -207,13 +214,14 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
-		    		soft_fail: None,
+		    		soft_fail: Vec::new(),
     			},
     			Step {
     				commands: vec![
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
+		    		label: None,
 		    		agents: vec![
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -225,21 +233,20 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
-		    		soft_fail: Some(
+		    		soft_fail: vec![
 		    			vec![
-		    				vec![
-		    					("exit_status".to_string(), 1)
-		    				]
-		    				.into_iter()
-		    				.collect()
+		    				("exit_status".to_string(), 1)
 		    			]
-		    		),
+		    			.into_iter()
+		    			.collect()
+		    		],
     			},
     			Step {
     				commands: vec![
 		    			"cd $CRATE".to_string(),
 		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
 		    		],
+		    		label: None,
 		    		agents: vec![
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
@@ -251,15 +258,13 @@ mod tests {
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
-		    		soft_fail: Some(
+		    		soft_fail: vec![
 		    			vec![
-		    				vec![
-		    					("exit_status".to_string(), 1)
-		    				]
-		    				.into_iter()
-		    				.collect()
+		    				("exit_status".to_string(), 1)
 		    			]
-		    		),
+		    			.into_iter()
+		    			.collect()
+		    		],
     			}
     		]
     	});
