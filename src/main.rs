@@ -1,3 +1,5 @@
+extern crate clap;
+
 #[macro_use]
 extern crate itertools;
 
@@ -12,7 +14,6 @@ extern crate serde_yaml;
 use serde::{Serialize, Deserialize};
 
 use std::{
-	env,
 	fs::File,
 	io::Read,
 	result::Result,
@@ -118,17 +119,32 @@ impl From<Travis> for Buildkite {
 	}
 }
 
+fn buildkite_pipeline_for_travis_config(travis: Travis) -> Result<Buildkite, Box<Error>> {
+    Ok(travis.into())
+}
+
 fn main() -> Result<(), Box<Error>> {
-	for argument in env::args().into_iter().skip(1) {
-		let mut file = File::open(argument)?;
-	    let mut contents = String::new();
-	    file.read_to_string(&mut contents)?;
+	let matches = clap::App::new("travis-pipeline")
+      .author("Keith Duncan <keith_duncan@me.com>")
+      .about("Travis to Buildkite translation layer")
+      .arg(clap::Arg::with_name("INPUT")
+           .help("The path to the travis file to translate")
+           .required(true)
+           .value_name("FILE")
+           .index(1))
+      .get_matches();
 
-	    let travis: Travis = serde_yaml::from_str(&contents)?;
-	    let buildkite: Buildkite = travis.into();
+    let file_path = matches.value_of("INPUT").expect("INPUT is required");
 
-	    println!("{}", serde_yaml::to_string(&buildkite)?);
-	}
+	let mut file = File::open(file_path)?;
+
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+
+    let travis: Travis = serde_yaml::from_str(&contents)?;
+    let buildkite = buildkite_pipeline_for_travis_config(travis)?;
+
+    println!("{}", serde_yaml::to_string(&buildkite)?);
 
     Ok(())
 }
