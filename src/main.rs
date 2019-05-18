@@ -119,20 +119,44 @@ impl From<Travis> for Buildkite {
 	}
 }
 
-fn buildkite_pipeline_for_travis_config(travis: Travis) -> Result<Buildkite, Box<Error>> {
-    Ok(travis.into())
+fn buildkite_pipeline_for_travis_config(travis: Travis, queue: Option<&str>) -> Buildkite {
+    let mut buildkite: Buildkite = travis.into();
+
+    if let Some(queue) = queue {
+    	buildkite.steps = buildkite
+    		.steps
+    		.into_iter()
+    		.map(|step| {
+    			let mut new_agents = step.agents.clone();
+    			new_agents.insert("queue".to_string(), queue.to_string());
+
+    			Step {
+    				agents: new_agents,
+    				..step
+    			}
+	    	})
+	    	.collect();
+    }
+
+    return buildkite;
 }
 
 fn main() -> Result<(), Box<Error>> {
 	let matches = clap::App::new("travis-pipeline")
       .author("Keith Duncan <keith_duncan@me.com>")
       .about("Travis to Buildkite translation layer")
+      .arg(clap::Arg::with_name("QUEUE")
+           .long("queue")
+           .help("The queue for the generated Buildkite steps")
+           .takes_value(true))
       .arg(clap::Arg::with_name("INPUT")
            .help("The path to the travis file to translate")
            .required(true)
            .value_name("FILE")
            .index(1))
       .get_matches();
+
+    let queue = matches.value_of("QUEUE");
 
     let file_path = matches.value_of("INPUT").expect("INPUT is required");
 
@@ -142,7 +166,7 @@ fn main() -> Result<(), Box<Error>> {
     file.read_to_string(&mut contents)?;
 
     let travis: Travis = serde_yaml::from_str(&contents)?;
-    let buildkite = buildkite_pipeline_for_travis_config(travis)?;
+    let buildkite = buildkite_pipeline_for_travis_config(travis, queue);
 
     println!("{}", serde_yaml::to_string(&buildkite)?);
 
@@ -156,10 +180,7 @@ mod tests {
 		Buildkite,
 		Step,
 		Map,
-		pretty_assertions::{
-			assert_eq,
-			assert_ne
-		},
+		pretty_assertions::assert_eq,
 	};
 
     #[test]
@@ -214,7 +235,7 @@ mod tests {
     	};
     	println!("{:#?}", travis);
 
-    	let buildkite: Buildkite = travis.into();
+    	let buildkite: Buildkite = super::buildkite_pipeline_for_travis_config(travis, Some("ecs/agents"));
     	println!("{:#?}", buildkite);
 
     	assert_eq!(buildkite, Buildkite {
@@ -226,6 +247,7 @@ mod tests {
 		    		],
 		    		label: Some(":rust: stable, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
 		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
 		    		]
@@ -246,6 +268,7 @@ mod tests {
 		    		],
 		    		label: Some(":rust: stable, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
 		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
 		    			("rust".to_string(), "stable".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
 		    		]
@@ -266,6 +289,7 @@ mod tests {
 		    		],
 		    		label: Some(":rust: nightly, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
 		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
 		    		]
@@ -292,6 +316,7 @@ mod tests {
 		    		],
 		    		label: Some(":rust: nightly, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
 		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
 		    			("rust".to_string(), "nightly".to_string()),
 		    			("rust:embedded".to_string(), "true".to_string()),
 		    		]
