@@ -69,7 +69,6 @@ impl From<Travis> for Buildkite {
 				label: Some(format!(":rust: {}, {}", rust, env)),
 				agents: vec![
 						("rust".to_string(), rust.clone()),
-						("rust:embedded".to_string(), "true".to_string()),
 					]
 					.into_iter()
 					.collect(),
@@ -119,24 +118,27 @@ impl From<Travis> for Buildkite {
 	}
 }
 
-fn buildkite_pipeline_for_travis_config(travis: Travis, queue: Option<&str>) -> Buildkite {
+fn buildkite_pipeline_for_travis_config(travis: Travis, queue: Option<&str>, tags: Option<Vec<&str>>) -> Buildkite {
     let mut buildkite: Buildkite = travis.into();
 
-    if let Some(queue) = queue {
-    	buildkite.steps = buildkite
-    		.steps
-    		.into_iter()
-    		.map(|step| {
-    			let mut new_agents = step.agents.clone();
-    			new_agents.insert("queue".to_string(), queue.to_string());
+    buildkite
+		.steps
+		.iter_mut()
+		.for_each(|step| {
+			if let Some(queue) = queue {
+				step.agents.insert("queue".to_string(), queue.to_string());
+			}
 
-    			Step {
-    				agents: new_agents,
-    				..step
-    			}
-	    	})
-	    	.collect();
-    }
+			if let Some(tags) = tags.clone() {
+				let kv_tags = tags
+					.iter()
+					.map(|tag| {
+						let key_value: Vec<_> = tag.splitn(2, '=').collect();
+						(key_value[0].to_string(), key_value[1].to_string())
+					});
+				step.agents.extend(kv_tags);
+			}
+    	});
 
     return buildkite;
 }
@@ -149,6 +151,11 @@ fn main() -> Result<(), Box<Error>> {
            .long("queue")
            .help("The queue for the generated Buildkite steps")
            .takes_value(true))
+      .arg(clap::Arg::with_name("TAGS")
+      	   .multiple(true)
+           .long("tags")
+           .help("The tags to use for the generated Buildkite steps")
+           .takes_value(true))
       .arg(clap::Arg::with_name("INPUT")
            .help("The path to the travis file to translate")
            .required(true)
@@ -157,6 +164,9 @@ fn main() -> Result<(), Box<Error>> {
       .get_matches();
 
     let queue = matches.value_of("QUEUE");
+    let tags = matches
+    	.values_of("TAGS")
+    	.map(clap::Values::collect);
 
     let file_path = matches.value_of("INPUT").expect("INPUT is required");
 
@@ -166,7 +176,7 @@ fn main() -> Result<(), Box<Error>> {
     file.read_to_string(&mut contents)?;
 
     let travis: Travis = serde_yaml::from_str(&contents)?;
-    let buildkite = buildkite_pipeline_for_travis_config(travis, queue);
+    let buildkite = buildkite_pipeline_for_travis_config(travis, queue, tags);
 
     println!("{}", serde_yaml::to_string(&buildkite)?);
 
@@ -235,7 +245,9 @@ mod tests {
     	};
     	println!("{:#?}", travis);
 
-    	let buildkite: Buildkite = super::buildkite_pipeline_for_travis_config(travis, Some("ecs/agents"));
+    	let buildkite: Buildkite = super::buildkite_pipeline_for_travis_config(travis, Some("ecs/agents"), Some(vec![
+    		"rust:embedded=true"
+    	]));
     	println!("{:#?}", buildkite);
 
     	assert_eq!(buildkite, Buildkite {
