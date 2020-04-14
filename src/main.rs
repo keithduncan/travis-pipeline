@@ -139,7 +139,7 @@ fn buildkite_pipeline_for_travis_config(travis: Travis, agent_query_rules: Optio
     return buildkite;
 }
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
 	let matches = clap::App::new("travis-pipeline")
       .author("Keith Duncan <keith_duncan@me.com>")
       .about("Travis to Buildkite translation layer")
