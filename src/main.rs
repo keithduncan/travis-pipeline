@@ -118,21 +118,21 @@ impl From<Travis> for Buildkite {
 	}
 }
 
-fn buildkite_pipeline_for_travis_config(travis: Travis, tags: Option<Vec<&str>>) -> Buildkite {
+fn buildkite_pipeline_for_travis_config(travis: Travis, agent_query_rules: Option<Vec<&str>>) -> Buildkite {
     let mut buildkite: Buildkite = travis.into();
 
     buildkite
 		.steps
 		.iter_mut()
 		.for_each(|step| {
-			if let Some(tags) = tags.clone() {
-				let kv_tags = tags
+			if let Some(agent_query_rules) = agent_query_rules.clone() {
+				let kv_rules = agent_query_rules
 					.iter()
-					.map(|tag| {
-						let key_value: Vec<_> = tag.splitn(2, '=').collect();
+					.map(|rule| {
+						let key_value: Vec<_> = rule.splitn(2, '=').collect();
 						(key_value[0].to_string(), key_value[1].to_string())
 					});
-				step.agents.extend(kv_tags);
+				step.agents.extend(kv_rules);
 			}
     	});
 
@@ -143,11 +143,11 @@ fn main() -> Result<(), Box<Error>> {
 	let matches = clap::App::new("travis-pipeline")
       .author("Keith Duncan <keith_duncan@me.com>")
       .about("Travis to Buildkite translation layer")
-      .arg(clap::Arg::with_name("TAGS")
-      	   .multiple(true)
-           .long("tags")
-           .help("The tags to use for the generated Buildkite steps")
-           .takes_value(true))
+      .arg(clap::Arg::with_name("AGENT_QUERY_RULES")
+           .long("agent-query-rules")
+           .help("The agent query rules to use for the generated Buildkite steps.")
+           .takes_value(true)
+           .multiple(true))
       .arg(clap::Arg::with_name("INPUT")
            .help("The path to the travis file to translate")
            .required(true)
@@ -155,8 +155,8 @@ fn main() -> Result<(), Box<Error>> {
            .index(1))
       .get_matches();
 
-    let tags = matches
-    	.values_of("TAGS")
+    let agent_query_rules = matches
+    	.values_of("AGENT_QUERY_RULES")
     	.map(clap::Values::collect);
 
     let file_path = matches.value_of("INPUT").expect("INPUT is required");
@@ -167,7 +167,7 @@ fn main() -> Result<(), Box<Error>> {
     file.read_to_string(&mut contents)?;
 
     let travis: Travis = serde_yaml::from_str(&contents)?;
-    let buildkite = buildkite_pipeline_for_travis_config(travis, tags);
+    let buildkite = buildkite_pipeline_for_travis_config(travis, agent_query_rules);
 
     println!("{}", serde_yaml::to_string(&buildkite)?);
 
