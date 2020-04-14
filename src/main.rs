@@ -24,6 +24,7 @@ use std::{
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 struct Travis {
+    language: String,
 	rust: Vec<String>,
 	env: Vec<String>,
 	script: Vec<String>,
@@ -203,6 +204,7 @@ mod tests {
     #[test]
     fn translate() {
     	let travis = Travis {
+            language: "rust".to_string(),
     		rust: vec!["stable".to_string(), "nightly".to_string()],
     		env: vec![
     			"CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string(),
