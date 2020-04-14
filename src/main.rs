@@ -118,17 +118,13 @@ impl From<Travis> for Buildkite {
 	}
 }
 
-fn buildkite_pipeline_for_travis_config(travis: Travis, queue: Option<&str>, tags: Option<Vec<&str>>) -> Buildkite {
+fn buildkite_pipeline_for_travis_config(travis: Travis, tags: Option<Vec<&str>>) -> Buildkite {
     let mut buildkite: Buildkite = travis.into();
 
     buildkite
 		.steps
 		.iter_mut()
 		.for_each(|step| {
-			if let Some(queue) = queue {
-				step.agents.insert("queue".to_string(), queue.to_string());
-			}
-
 			if let Some(tags) = tags.clone() {
 				let kv_tags = tags
 					.iter()
@@ -147,10 +143,6 @@ fn main() -> Result<(), Box<Error>> {
 	let matches = clap::App::new("travis-pipeline")
       .author("Keith Duncan <keith_duncan@me.com>")
       .about("Travis to Buildkite translation layer")
-      .arg(clap::Arg::with_name("QUEUE")
-           .long("queue")
-           .help("The queue for the generated Buildkite steps")
-           .takes_value(true))
       .arg(clap::Arg::with_name("TAGS")
       	   .multiple(true)
            .long("tags")
@@ -163,7 +155,6 @@ fn main() -> Result<(), Box<Error>> {
            .index(1))
       .get_matches();
 
-    let queue = matches.value_of("QUEUE");
     let tags = matches
     	.values_of("TAGS")
     	.map(clap::Values::collect);
@@ -176,7 +167,7 @@ fn main() -> Result<(), Box<Error>> {
     file.read_to_string(&mut contents)?;
 
     let travis: Travis = serde_yaml::from_str(&contents)?;
-    let buildkite = buildkite_pipeline_for_travis_config(travis, queue, tags);
+    let buildkite = buildkite_pipeline_for_travis_config(travis, tags);
 
     println!("{}", serde_yaml::to_string(&buildkite)?);
 
@@ -245,9 +236,10 @@ mod tests {
     	};
     	println!("{:#?}", travis);
 
-    	let buildkite: Buildkite = super::buildkite_pipeline_for_travis_config(travis, Some("ecs/agents"), Some(vec![
-    		"rust:embedded=true"
-    	]));
+        let buildkite: Buildkite = super::buildkite_pipeline_for_travis_config(travis, Some(vec![
+            "queue=ecs/agents",
+            "rust:embedded=true",
+        ]));
     	println!("{:#?}", buildkite);
 
     	assert_eq!(buildkite, Buildkite {
