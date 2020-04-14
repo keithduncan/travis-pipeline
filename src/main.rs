@@ -185,11 +185,6 @@ mod tests {
 	};
 
     #[test]
-    fn it_works() {
-    	assert_eq!(2 + 2, 4);
-    }
-
-    #[test]
     fn convert_env() {
     	let travis_env = "CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"";
     	println!("{:#?}", travis_env);
