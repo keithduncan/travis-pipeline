@@ -46,7 +46,10 @@ impl From<Travis> for Buildkite {
 				label: Some(format!(":rust: {}, {}", rust, env)),
 				agents: {
 					let mut agents = Map::new();
-					agents.insert("image".to_string(), rust.parse::<travis::Rust>().unwrap().image());
+
+					let image = rust.parse::<travis::Rust>().ok().and_then(|rust| rust.image()).unwrap();
+					agents.insert("image".to_string(), image);
+
 					agents
 				},
 				env: env_for_travis_env(&env),

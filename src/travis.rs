@@ -25,13 +25,15 @@ pub enum Rust {
 
 impl Rust {
     // Get a docker image for this travis rust tag
-    pub fn image(&self) -> String {
-    	match self {
+    pub fn image(&self) -> Option<String> {
+    	Some(match self {
     		&Rust::Stable => "rust:latest".to_string(),
-    		&Rust::Beta => unimplemented!(),
     		&Rust::Nightly => "rustlang/rust:nightly".to_string(),
     		&Rust::Release(ref ver) => format!("rust:{}", ver),
-    	}
+
+    		// There are no official images with rust:beta installed, womp
+    		&Rust::Beta => return None,
+    	})
     }
 }
 
