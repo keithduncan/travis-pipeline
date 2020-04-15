@@ -47,8 +47,12 @@ impl From<Travis> for Buildkite {
 				agents: {
 					let mut agents = Map::new();
 
-					let image = rust.parse::<travis::Rust>().ok().and_then(|rust| rust.image()).unwrap();
-					agents.insert("image".to_string(), image);
+					if let Some(image) = rust.parse::<travis::Rust>().ok().and_then(|rust| rust.image()) {
+						agents.insert("image".to_string(), image);
+					} else {
+						eprintln!("cannot generate step for rust: {:?}, env: {:?}", rust, env);
+						continue;
+					}
 
 					agents
 				},
