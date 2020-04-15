@@ -36,63 +36,72 @@ fn env_for_travis_env(travis: &str) -> Map<String, String> {
 		.collect()
 }
 
-impl From<Travis> for Buildkite {
-	fn from(travis: Travis) -> Buildkite {
-		let mut steps: Vec<Step> = Vec::new();
+fn rust_steps(travis: Travis) -> Vec<Step> {
+	let mut steps: Vec<Step> = Vec::new();
 
-		for (rust, env) in iproduct!(travis.rust, travis.env) {
-			let mut step = Step {
-				commands: travis.script.clone(),
-				label: Some(format!(":rust: {}, {}", rust, env)),
-				agents: {
-					let mut agents = Map::new();
+	for (rust, env) in iproduct!(travis.rust, travis.env) {
+		let mut step = Step {
+			commands: travis.script.clone(),
+			label: Some(format!(":rust: {}, {}", rust, env)),
+			agents: {
+				let mut agents = Map::new();
 
-					if let Some(image) = rust.parse::<travis::rust::Rust>().ok().and_then(|rust| rust.image()) {
-						agents.insert("image".to_string(), image);
-					} else {
-						eprintln!("cannot generate step for rust: {:?}, env: {:?}", rust, env);
-						continue;
+				if let Some(image) = rust.parse::<travis::rust::Rust>().ok().and_then(|rust| rust.image()) {
+					agents.insert("image".to_string(), image);
+				} else {
+					eprintln!("cannot generate step for rust: {:?}, env: {:?}", rust, env);
+					continue;
+				}
+
+				agents
+			},
+			env: env_for_travis_env(&env),
+			soft_fail: Vec::new(),
+		};
+
+		if let Some(allow) = travis.matrix.as_ref().and_then(|matrix| matrix.get("allow_failures")) {
+			let optional = allow
+				.iter()
+				.any(|ref case| {
+					// TODO make this generic for the iproduct fields
+					if let Some(case_rust) = case.get("rust") {
+						if case_rust != &rust {
+							return false;
+						}
 					}
 
-					agents
-				},
-				env: env_for_travis_env(&env),
-				soft_fail: Vec::new(),
-			};
-
-			if let Some(allow) = travis.matrix.as_ref().and_then(|matrix| matrix.get("allow_failures")) {
-				let optional = allow
-					.iter()
-					.any(|ref case| {
-						// TODO make this generic for the iproduct fields
-						if let Some(case_rust) = case.get("rust") {
-							if case_rust != &rust {
-								return false;
-							}
+					if let Some(case_env) = case.get("env") {
+						if case_env != &env {
+							return false;
 						}
+					}
 
-						if let Some(case_env) = case.get("env") {
-							if case_env != &env {
-								return false;
-							}
-						}
+					true
+				});
 
-						true
-					});
-
-				if optional {
-					step.soft_fail = vec![
-						vec![
-							("exit_status".to_string(), "*".to_string()),
-						]
-						.into_iter()
-						.collect()
-					];
-				}
+			if optional {
+				step.soft_fail = vec![
+					vec![
+						("exit_status".to_string(), "*".to_string()),
+					]
+					.into_iter()
+					.collect()
+				];
 			}
-
-			steps.push(step);
 		}
+
+		steps.push(step);
+	}
+
+	steps
+}
+
+impl From<Travis> for Buildkite {
+	fn from(travis: Travis) -> Buildkite {
+		let steps = match travis.language.as_str() {
+			"rust" => rust_steps(travis),
+			_ => panic!("cannot generate steps for language: {:?}", travis.language),
+		};
 
 		Buildkite {
 			steps: steps,
