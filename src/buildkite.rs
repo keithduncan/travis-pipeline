@@ -53,36 +53,34 @@ impl From<Travis> for Buildkite {
 				soft_fail: Vec::new(),
 			};
 
-			if let Some(ref matrix) = travis.matrix {
-				if let Some(allow) = matrix.get("allow_failures") {
-					let optional = allow
-						.iter()
-						.any(|case| {
-							// TODO make this generic for the iproduct fields
-							if let Some(case_rust) = case.get("rust") {
-								if case_rust != &rust {
-									return false;
-								}
+			if let Some(allow) = travis.matrix.as_ref().and_then(|matrix| matrix.get("allow_failures")) {
+				let optional = allow
+					.iter()
+					.any(|ref case| {
+						// TODO make this generic for the iproduct fields
+						if let Some(case_rust) = case.get("rust") {
+							if case_rust != &rust {
+								return false;
 							}
+						}
 
-							if let Some(case_env) = case.get("env") {
-								if case_env != &env {
-									return false;
-								}
+						if let Some(case_env) = case.get("env") {
+							if case_env != &env {
+								return false;
 							}
+						}
 
-							true
-						});
+						true
+					});
 
-					if optional {
-						step.soft_fail = vec![
-							vec![
-								("exit_status".to_string(), "*".to_string()),
-							]
-							.into_iter()
-							.collect()
-						];
-					}
+				if optional {
+					step.soft_fail = vec![
+						vec![
+							("exit_status".to_string(), "*".to_string()),
+						]
+						.into_iter()
+						.collect()
+					];
 				}
 			}
 
