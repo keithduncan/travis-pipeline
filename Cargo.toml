@@ -1,6 +1,6 @@
 [package]
 name = "travis-pipeline"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Keith Duncan <keith_duncan@me.com>"]
 edition = "2018"
 
