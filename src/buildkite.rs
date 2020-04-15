@@ -175,7 +175,7 @@ mod tests {
 
         let buildkite: Buildkite = super::pipeline_for_travis_config(travis, Some(vec![
             "queue=ecs/agents",
-            "rust:embedded=true",
+            "task-definition=rust-embedded",
         ]));
     	println!("{:#?}", buildkite);
 
@@ -189,8 +189,8 @@ mod tests {
 		    		label: Some(":rust: stable, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
 		    		agents: vec![
 		    			("queue".to_string(), "ecs/agents".to_string()),
-		    			("rust".to_string(), "stable".to_string()),
-		    			("rust:embedded".to_string(), "true".to_string()),
+		    			("image".to_string(), "rust:latest".to_string()),
+		    			("task-definition".to_string(), "rust-embedded".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
@@ -210,8 +210,8 @@ mod tests {
 		    		label: Some(":rust: stable, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
 		    		agents: vec![
 		    			("queue".to_string(), "ecs/agents".to_string()),
-		    			("rust".to_string(), "stable".to_string()),
-		    			("rust:embedded".to_string(), "true".to_string()),
+		    			("image".to_string(), "rust:latest".to_string()),
+		    			("task-definition".to_string(), "rust-embedded".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
@@ -231,8 +231,8 @@ mod tests {
 		    		label: Some(":rust: nightly, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
 		    		agents: vec![
 		    			("queue".to_string(), "ecs/agents".to_string()),
-		    			("rust".to_string(), "nightly".to_string()),
-		    			("rust:embedded".to_string(), "true".to_string()),
+		    			("image".to_string(), "rustlang/rust:nightly".to_string()),
+		    			("task-definition".to_string(), "rust-embedded".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),
@@ -258,8 +258,8 @@ mod tests {
 		    		label: Some(":rust: nightly, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
 		    		agents: vec![
 		    			("queue".to_string(), "ecs/agents".to_string()),
-		    			("rust".to_string(), "nightly".to_string()),
-		    			("rust:embedded".to_string(), "true".to_string()),
+		    			("image".to_string(), "rustlang/rust:nightly".to_string()),
+		    			("task-definition".to_string(), "rust-embedded".to_string()),
 		    		]
 		    		.into_iter()
 		    		.collect::<Map<_, _>>(),

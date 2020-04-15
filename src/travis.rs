@@ -42,7 +42,7 @@ impl FromStr for Rust {
 		Ok(match s {
 			"stable" => Rust::Stable,
 			"beta" => Rust::Beta,
-			"nighyly" => Rust::Nightly,
+			"nightly" => Rust::Nightly,
 			v => Rust::Release(v.to_string()),
 		})
 	}
