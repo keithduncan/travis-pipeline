@@ -113,3 +113,171 @@ pub fn pipeline_for_travis_config(travis: Travis, agent_query_rules: Option<Vec<
 
     return buildkite;
 }
+
+#[cfg(test)]
+mod tests {
+	use super::{
+		Map,
+		Travis,
+		Buildkite,
+		Step,
+	};
+
+	use pretty_assertions::assert_eq;
+
+	#[test]
+    fn convert_env() {
+    	let travis_env = "CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"";
+    	println!("{:#?}", travis_env);
+    	
+    	let buildkite_env = super::env_for_travis_env(travis_env);
+    	println!("{:#?}", buildkite_env);
+
+    	assert_eq!(buildkite_env, vec![
+    		("CRATE".to_string(), "boards/feather_m4".to_string()),
+    		("EXAMPLES".to_string(), "--example=blinky_basic --example=blinky_rtfm".to_string()),
+    	]
+    	.into_iter()
+    	.collect::<Map<_, _>>());
+    }
+
+    #[test]
+    fn translate() {
+    	let travis = Travis {
+            language: "rust".to_string(),
+    		rust: vec!["stable".to_string(), "nightly".to_string()],
+    		env: vec![
+    			"CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string(),
+    			"CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()
+    		],
+    		script: vec![
+    			"cd $CRATE".to_string(),
+    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
+    		],
+    		matrix: Some(
+    			vec![
+    				(
+    					"allow_failures".to_string(),
+    					vec![
+    						vec![
+    							("rust".to_string(), "nightly".to_string())
+    						]
+    						.into_iter()
+    						.collect()
+    					]
+    				),
+    			]
+    			.into_iter()
+    			.collect()
+    		),
+    	};
+    	println!("{:#?}", travis);
+
+        let buildkite: Buildkite = super::pipeline_for_travis_config(travis, Some(vec![
+            "queue=ecs/agents",
+            "rust:embedded=true",
+        ]));
+    	println!("{:#?}", buildkite);
+
+    	assert_eq!(buildkite, Buildkite {
+    		steps: vec![
+    			Step {
+    				commands: vec![
+		    			"cd $CRATE".to_string(),
+		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
+		    		],
+		    		label: Some(":rust: stable, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
+		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
+		    			("rust".to_string(), "stable".to_string()),
+		    			("rust:embedded".to_string(), "true".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		env: vec![
+		    			("CRATE".to_string(), "boards/feather_m4".to_string()),
+		    			("EXAMPLES".to_string(), "--example=blinky_basic --example=blinky_rtfm".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		soft_fail: Vec::new(),
+    			},
+    			Step {
+    				commands: vec![
+		    			"cd $CRATE".to_string(),
+		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
+		    		],
+		    		label: Some(":rust: stable, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
+		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
+		    			("rust".to_string(), "stable".to_string()),
+		    			("rust:embedded".to_string(), "true".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		env: vec![
+		    			("CRATE".to_string(), "boards/gemma_m0".to_string()),
+		    			("FEATURES".to_string(), "--features=unproven".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		soft_fail: Vec::new(),
+    			},
+    			Step {
+    				commands: vec![
+		    			"cd $CRATE".to_string(),
+		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
+		    		],
+		    		label: Some(":rust: nightly, CRATE=boards/feather_m4 EXAMPLES=\"--example=blinky_basic --example=blinky_rtfm\"".to_string()),
+		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
+		    			("rust".to_string(), "nightly".to_string()),
+		    			("rust:embedded".to_string(), "true".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		env: vec![
+		    			("CRATE".to_string(), "boards/feather_m4".to_string()),
+		    			("EXAMPLES".to_string(), "--example=blinky_basic --example=blinky_rtfm".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		soft_fail: vec![
+		    			vec![
+		    				("exit_status".to_string(), "*".to_string()),
+		    			]
+		    			.into_iter()
+		    			.collect()
+		    		],
+    			},
+    			Step {
+    				commands: vec![
+		    			"cd $CRATE".to_string(),
+		    			"cargo build ${EXAMPLES:---examples} $FEATURES".to_string()
+		    		],
+		    		label: Some(":rust: nightly, CRATE=boards/gemma_m0 FEATURES=\"--features=unproven\"".to_string()),
+		    		agents: vec![
+		    			("queue".to_string(), "ecs/agents".to_string()),
+		    			("rust".to_string(), "nightly".to_string()),
+		    			("rust:embedded".to_string(), "true".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		env: vec![
+		    			("CRATE".to_string(), "boards/gemma_m0".to_string()),
+		    			("FEATURES".to_string(), "--features=unproven".to_string()),
+		    		]
+		    		.into_iter()
+		    		.collect::<Map<_, _>>(),
+		    		soft_fail: vec![
+		    			vec![
+		    				("exit_status".to_string(), "*".to_string()),
+		    			]
+		    			.into_iter()
+		    			.collect()
+		    		],
+    			}
+    		]
+    	});
+    }
+}
