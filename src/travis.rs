@@ -1,3 +1,5 @@
+use core::str::FromStr;
+
 use std::{
 	collections::HashMap as Map,
 };
@@ -31,4 +33,17 @@ impl Rust {
     		&Rust::Release(ref ver) => format!("rust:{}", ver),
     	}
     }
+}
+
+impl FromStr for Rust {
+	type Err = ();
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(match s {
+			"stable" => Rust::Stable,
+			"beta" => Rust::Beta,
+			"nighyly" => Rust::Nightly,
+			v => Rust::Release(v.to_string()),
+		})
+	}
 }

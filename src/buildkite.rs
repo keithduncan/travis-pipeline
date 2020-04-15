@@ -5,7 +5,7 @@ use std::{
 
 use serde::Serialize;
 
-use super::travis::Travis;
+use super::travis::{self, Travis};
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
 pub struct Buildkite {
@@ -44,11 +44,11 @@ impl From<Travis> for Buildkite {
 			let mut step = Step {
 				commands: travis.script.clone(),
 				label: Some(format!(":rust: {}, {}", rust, env)),
-				agents: vec![
-						("rust".to_string(), rust.clone()),
-					]
-					.into_iter()
-					.collect(),
+				agents: {
+					let mut agents = Map::new();
+					agents.insert("image".to_string(), rust.parse::<travis::Rust>().unwrap().image());
+					agents
+				},
 				env: env_for_travis_env(&env),
 				soft_fail: Vec::new(),
 			};
