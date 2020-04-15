@@ -24,9 +24,10 @@ use travis::Travis;
 mod buildkite;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	let matches = clap::App::new("travis-pipeline")
-      .author("Keith Duncan <keith_duncan@me.com>")
-      .about("Travis to Buildkite translation layer")
+	let matches = clap::App::new(env!("CARGO_PKG_NAME"))
+      .version(env!("CARGO_PKG_VERSION"))
+      .author(env!("CARGO_PKG_AUTHORS"))
+      .about(env!("CARGO_PKG_DESCRIPTION"))
       .arg(clap::Arg::with_name("AGENT_QUERY_RULES")
            .long("agent-query-rules")
            .help("The agent query rules to use for the generated Buildkite steps.")
